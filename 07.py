@@ -5,7 +5,7 @@ import re
 # How many bag colors can eventually contain at least one shiny gold bag? (The list of rules is quite long; make sure you get all of it.)
 def part1(data):
   target = "shiny gold"
-  rules = dict(map(parse_rule, data.split('\n')))
+  rules = parse_rules(data)
   
   reverse_rules = dict()
   for parent, items in rules.items():
@@ -30,7 +30,7 @@ def part1(data):
 # How many individual bags are required inside your single shiny gold bag?
 def part2(data):
   target = "shiny gold"
-  rules = dict(map(parse_rule, data.split('\n')))
+  rules = parse_rules(data)
   cost = find_cost(rules, target)
   return cost - 1
 
@@ -73,6 +73,10 @@ def test_part1(example1_data):
   # So, in this example, the number of bag colors that can eventually contain at least one shiny gold bag is 4.
   assert part1(example1_data) == 4
 
+def test_part2(example2_data):
+  # In this example, a single shiny gold bag must contain 126 other bags.
+  assert part2(example2_data) == 126
+
 def test_parse_rule():
   assert parse_rule(
       'light red bags contain 1 bright white bag, 2 muted yellow bags.') == [
@@ -93,10 +97,6 @@ def test_parse_rule():
               "faded blue": 9
           }
       ]
-
-def test_part2(example2_data):
-  # In this example, a single shiny gold bag must contain 126 other bags.
-  assert part2(example2_data) == 126
 
 def test_find_cost(example2_data):
   rules = parse_rules(example2_data)
