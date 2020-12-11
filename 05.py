@@ -3,10 +3,12 @@
 # As a sanity check, look through your list of boarding passes. 
 # What is the highest seat ID on a boarding pass?
 def part1(data):
-  return None
+  return max(map(lambda x: decode_pass(x)['seat'], data.split('\n')))
 
 def decode_pass(data):
-  return {'row': 44, 'column': 5, 'seat': 357}
+  row = int("".join(str(['F', 'B'].index(ch)) for ch in data[0:7]), 2)
+  col = int("".join(str(['L', 'R'].index(ch)) for ch in data[7:10]), 2)
+  return {'row': row, 'column': col, 'seat': row * 8 + col}
 
 def test_decode_pass(fn = decode_pass):
   # So, decoding FBFBBFFRLR reveals that it is the seat at row 44, column 5.
@@ -14,11 +16,11 @@ def test_decode_pass(fn = decode_pass):
   tests = {
     'FBFBBFFRLR': { 'row': 44, 'column': 5, 'seat': 357 },
     'BFFFBBFRRR': { 'row': 70, 'column': 7, 'seat': 567 },
-    # 'FFFBBBFRRR': { 'row': 14, 'column': 7, 'seat': 119 },
-    # 'BBFFBBFRLL': { 'row': 102, 'column': 4, 'seat': 820 }
+    'FFFBBBFRRR': { 'row': 14, 'column': 7, 'seat': 119 },
+    'BBFFBBFRLL': { 'row': 102, 'column': 4, 'seat': 820 }
   }
   for test, expected in tests.items():
-    assert decode_pass(test) == expected
+    assert fn(test) == expected
 
 
 def part2(data):
