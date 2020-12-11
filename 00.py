@@ -1,5 +1,4 @@
 
-
 def part1(data):
   part1_test(part1_fn)
   print('self-check tests PASS')
