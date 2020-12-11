@@ -5,6 +5,18 @@
 def part1(data):
   return max(map(lambda x: decode_pass(x)['seat'], data.split('\n')))
 
+# It's a completely full flight, so your seat should be the only missing boarding pass in your list. 
+# Your seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from yours will be in your list.
+# What is the ID of your seat?
+def part2(data):
+  passes = list(map(lambda x: decode_pass(x)['seat'], data.split('\n')))
+  seats = set(range(min(passes), max(passes)))
+  missing = seats.difference(passes)
+  return missing
+
+
+
+
 def decode_pass(data):
   row = int("".join(str(['F', 'B'].index(ch)) for ch in data[0:7]), 2)
   col = int("".join(str(['L', 'R'].index(ch)) for ch in data[7:10]), 2)
@@ -21,15 +33,3 @@ def test_decode_pass(fn = decode_pass):
   }
   for test, expected in tests.items():
     assert fn(test) == expected
-
-
-def part2(data):
-  part2_test(part2_fn)
-  print('self-check tests PASS')
-  return part2_fn(data)
-
-def part2_fn(data):
-  return None
-
-def part2_test(data):
-  return None
