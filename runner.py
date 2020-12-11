@@ -3,6 +3,7 @@ Author: Scoder12"""
 
 import time
 import math
+import pytest
 from typing import Any
 
 def format_filename(day):
@@ -68,6 +69,12 @@ def get_data(day):
 
 def run(day, year=2020):
     print(f"AOC {year} Day {day}")
+
+    testresult = pytest.main(["-q", format_filename(day) + '.py'])
+    if testresult != 0 and testresult != 5:
+      exitcodes = ['ok', 'some tests failed', 'were interrupted', 'an internal error occurred', 'a usage error was detected']
+      print(f'Tests ran & {exitcodes[testresult]} ({testresult}), stopping...')
+      return
 
     mod = __import__(format_filename(day))
     data = get_data(day)

@@ -14,7 +14,7 @@ def part1(data):
   valid = 0
   import re
   for entry in data.split('\n'):
-    match = re.search('(?P<min>\d+)-(?P<max>\d+) (?P<letter>\w): (?P<password>.*)', entry)
+    match = re.search(r'(?P<min>\d+)-(?P<max>\d+) (?P<letter>\w): (?P<password>.*)', entry)
     (min, max, letter, password) = match.groups()
     # print(min, max, letter, password)
     count = 0
@@ -36,7 +36,7 @@ def part2(data):
   valid = 0
   import re
   for entry in data.split('\n'):
-    match = re.search('(?P<min>\d+)-(?P<max>\d+) (?P<letter>\w): (?P<password>.*)', entry)
+    match = re.search(r'(?P<min>\d+)-(?P<max>\d+) (?P<letter>\w): (?P<password>.*)', entry)
     (min, max, ch, password) = match.groups()
     [i, j] = map(lambda x: password[int(x)-1], [min, max])
     if (i != j and ch in [i, j]): valid += 1

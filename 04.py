@@ -19,7 +19,7 @@ def part1(data):
 
 # Count the number of valid passports - those that have all required fields and valid values. Continue to treat cid as optional. In your batch file, how many passports are valid?
 def part2(data):
-  test_part2(part2_fn)
+  part2_test(part2_fn)
   print('part2 self-check tests PASS')
   return part2_fn(data)
   # guess 1: 132 (high) - BUG: using match() instead of fullmatch()
@@ -89,7 +89,7 @@ def define_fields():
   return [required_fields, validation_fns]
 
 
-def test_part2(fn):
+def part2_test(fn):
   # Here are some invalid passports:
   invalid_passports = """eyr:1972 cid:100
 hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926
