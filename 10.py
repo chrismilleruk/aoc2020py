@@ -3,15 +3,25 @@ import pytest
 
 # What is the number of 1-jolt differences multiplied by the number of 3-jolt differences?
 def part1(data):
-  return None
+  numbers = [int(n) for n in data.split('\n') if n != '']
+  numbers.sort()
+
+  for i in range(len(numbers) - 1):
+    numbers[i] = numbers[i+1] - numbers[i]
+  numbers.pop()
+  
+  # print(numbers.count(1), numbers.count(2), numbers.count(3))
+  # print(numbers)
+
+  return (numbers.count(1) + 1) * (numbers.count(3) + 1)
 
 # def part2(data):
 #   return None
 
 
 def test_part1(example1, example2):
-  assert part1(example1) is None
-  assert part1(example2) is None
+  assert part1(example1) is 7 * 5
+  assert part1(example2) is 22 * 10
 
 # In this example, when using every adapter, there are 7 differences of 1 jolt and 5 differences of 3 jolts.
 @pytest.fixture
