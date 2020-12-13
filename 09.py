@@ -5,7 +5,15 @@ import pytest
 def part1(data, period = 25):
   numbers = [int(n) for n in data.split('\n') if n != '']
 
-  # precalculate sums
+  # store precacluated sums with the following 
+  # array structure:
+  #    a | b | c | d | e | f
+  # a|[a,  ab, ac, ad, ae]
+  # b|    [b,  bc, bd, be]+[bf]
+  # c|        [c,  cd, ce]+[cf]
+  # d|            [d,  de]+[df]
+  # e|                [e] +[ef]
+  # f|                     [f]
   sums = list(map(lambda x: [x], numbers[0:period]))
   for i in range(1, period):
     for j in range(i-1, -1, -1):
@@ -32,20 +40,25 @@ def part1(data, period = 25):
 
   return None
 
-# retain precacluated sums with the following 
-# array structure:
-#    a | b | c | d | e | f
-# a|[a,  ab, ac, ad, ae]
-# b|    [b,  bc, bd, be]+[bf]
-# c|        [c,  cd, ce]+[cf]
-# d|            [d,  de]+[df]
-# e|                [e] +[ef]
-# f|                     [f]
- 
+# What is the encryption weakness in your XMAS-encrypted list of numbers?
+def part2(data, target = 466456641):
+  numbers = [int(n) for n in data.split('\n') if n != '']
+  sums = numbers.copy()
+
+  for i in range(len(sums)):
+    for j in range(i -1, -1, -1):
+      sums[j] += sums[i]
+      if sums[j] == target:
+        return min(numbers[j:i]) + max(numbers[j:i])
+  
 
 # In this example, after the 5-number preamble, almost every number is the sum of two of the previous 5 numbers; the only number that does not follow this rule is 127.
 def test_part1(example1):
   assert part1(example1, 5) == 127
+
+# To find the encryption weakness, add together the smallest and largest number in this contiguous range; in this example, these are 15 and 47, producing 62.
+def test_part2(example1):
+  assert part2(example1, 127) == 62
 
 @pytest.fixture
 def example1():
