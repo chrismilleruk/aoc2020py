@@ -3,25 +3,63 @@ import pytest
 
 # What is the number of 1-jolt differences multiplied by the number of 3-jolt differences?
 def part1(data):
+  diffs = get_diffs(data)
+  return diffs.count(1) * diffs.count(3)
+
+# What is the total number of distinct ways you can arrange the adapters to connect the charging outlet to your device?
+def part2(data):
+  diffs = get_diffs(data)
+  
+  # chains of ones can be rearranged with 2s and 3s 
+  # find chains of '1' and count the length
+  prev = 0
+  chains = []
+  for n in diffs:
+    if n == 1:
+      if prev == 1:
+        chains[-1] += 1
+      else:
+        chains.append(1)
+    prev = n
+  
+  # chain length -> possibilities
+  # 1 = 1
+  # 2 = 2  123,   13
+  # 3 = 4  1234,  124, 134,  14
+  # 4 = 7  12345, 1345, 1245, 1235, 125, 135, 145, 
+  lookup = [0, 1, 2, 4, 7]
+  ways = 1
+  for n in chains:
+    ways *= lookup[n] 
+  return ways
+
+
+def get_diffs(data):
   numbers = [int(n) for n in data.split('\n') if n != '']
   numbers.sort()
 
-  for i in range(len(numbers) - 1):
-    numbers[i] = numbers[i+1] - numbers[i]
-  numbers.pop()
+  prev = 0
+  for i in range(len(numbers)):
+    diff = numbers[i] - prev
+    prev = numbers[i]
+    numbers[i] = diff
+  numbers.append(3)
+
+  return numbers
   
-  # print(numbers.count(1), numbers.count(2), numbers.count(3))
-  # print(numbers)
 
-  return (numbers.count(1) + 1) * (numbers.count(3) + 1)
-
-# def part2(data):
-#   return None
-
-
-def test_part1(example1, example2):
+def test_part1_example1(example1):
   assert part1(example1) is 7 * 5
+
+def test_part1_example2(example2):
   assert part1(example2) is 22 * 10
+
+def test_part2_example1(example1):
+  assert part2(example1) == 8
+
+def test_part2_example2(example2):
+  assert part2(example2) == 19208
+
 
 # In this example, when using every adapter, there are 7 differences of 1 jolt and 5 differences of 3 jolts.
 @pytest.fixture
