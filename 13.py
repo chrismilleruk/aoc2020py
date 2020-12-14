@@ -62,7 +62,7 @@ def test_part1(example1):
 
 # In this example, the earliest timestamp at which this occurs is 1068781:
 def test_part2(example1):
-  # assert part2(example1) == 1068781
+  assert part2(example1) == 1068781
 
   # Here are some other examples:
   # The earliest timestamp that matches the list 17,x,13,19 is 3417.
