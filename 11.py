@@ -27,30 +27,34 @@ class Seating:
     self.frame = layout.split('\n')
     self.height = len(self.frame)
     self.width = len(self.frame[0])
-    self.seats = [[x,y] for y, line in enumerate(self.frame) for x, seat in enumerate(line) if seat == 'L']
+    self.seats = [[x,y] for y, row in enumerate(self.frame) for x, seat in enumerate(row) if seat == 'L']
+    self.adjacent = list(map(self.gen_adjacent, self.seats))
 
-  def count_adjacent(self, x, y):
+  def gen_adjacent(self, seat):
+    [x, y] = seat
     x1, x2, y1, y2 = max(x-1, 0), min(x+2, self.width), max(y-1, 0), min(y+2, self.height)
-    return sum([line[x1:x2].count('#') for line in self.frame[y1:y2]]) - (1 if self.frame[y][x] == '#' else 0)
-  
-  def count_occupied(self):
-    return "".join(self.frame).count('#')
+    return [[x, y] for x in range(x1, x2) for y in range(y1, y2) if [x, y] != seat and self.frame[y][x] == 'L']
 
+  def count_occupied(self, seats = None):
+    return list(map(lambda seat: self.frame[seat[1]][seat[0]], seats or self.seats)).count('#')
+  
   def step(self):
     changes_made = False
     next_frame = [list('.' * self.width) for _ in range(self.height)]
-    for [x, y] in self.seats:
+    for ([x, y], adjacent) in zip(self.seats, self.adjacent):
+      occupied = self.count_occupied(adjacent)
       # If a seat is empty (L) and there are no occupied seats adjacent to it, the seat becomes occupied.
-      if self.frame[y][x] == 'L' and self.count_adjacent(x, y) == 0:
+      if self.frame[y][x] == 'L' and occupied == 0:
         next_frame[y][x] = '#'
         changes_made = True
       # If a seat is occupied (#) and four or more seats adjacent to it are also occupied, the seat becomes empty.
-      elif self.frame[y][x] == '#' and self.count_adjacent(x, y) >= 4:
+      elif self.frame[y][x] == '#' and occupied >= 4:
         next_frame[y][x] = 'L'
         changes_made = True
       # Otherwise, the seat's state does not change.
       else:
         next_frame[y][x] = self.frame[y][x]
+      # print(x, y, self.frame[y][x], "".join(map(lambda seat: self.frame[seat[1]][seat[0]], adjacent)), occupied, next_frame[y][x])
     self.frame = ["".join(line) for line in next_frame]
     return changes_made
 
