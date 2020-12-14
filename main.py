@@ -20,6 +20,6 @@ import runner
 
 # For a menu where users can select a day, use this
 # max_day is optional, remove it for no limit
-# day = runner.get_day(max_day=11)
+day = runner.get_day(max_day=14)
 
-runner.run(day = 14)
+runner.run(day)
