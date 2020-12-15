@@ -1,5 +1,6 @@
 # Day 15: Rambunctious Recitation
 import pytest
+import os
 
 def part1(data, stopAfter = 2020):
   starting_numbers = list(map(int, data.split(',')))
@@ -21,6 +22,9 @@ def part1(data, stopAfter = 2020):
   return prev_num
 
 def part2(data):
+  if os.path.isdir("/home/runner") == True:
+    print('Long running functions often die unexpectedly in repl.it environment')
+    
   # 2020th number in 361ms (1ms without instrumentation)
   # 30000000th number := 82 minutes (14s without inst.)
   return part1(data, 30000000)
