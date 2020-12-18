@@ -1,59 +1,55 @@
 # Day 17: Conway Cubes
 import numpy as np 
 import pytest
+import re
 
-def part1(data, cycles = 6):
-  grid = parseGrid(data)
+def part1(data, ndmin = 3, cycles = 6):
+  grid = parseGrid(data, ndmin)
 
   for i in range(cycles):
     grid = cycle(grid)
     grid = trim(grid)
-    # print(grid)
+    print('cycle', i, grid.shape)
 
   return np.sum(grid)
 
-# def part2(data):
-#   grid = parseGrid(data, axis = 4)
+def part2(data):
+  return part1(data, ndmin = 4)
 
-#   for i in range(6):
-#     grid = cycle(grid)
-#     grid = trim(grid)
-
-#   return np.sum(grid)
-
-
-def cycle(grid):
-  shape = grid.shape
-  # shape2 = (shape[0]+2, shape[1]+2, shape[2]+2)
-  shape2 = list(map(lambda x: x+2, shape))
-  dtype = grid.dtype
+def cycle(grid1):
+  shape1 = grid1.shape
+  # shape2 = (shape1[0]+2, shape1[1]+2, shape1[2]+2)
+  shape2 = list(map(lambda x: x+2, shape1))
+  dtype = grid1.dtype
   grid2 = np.zeros(shape2, dtype)
 
   for idx, _ in np.ndenumerate(grid2):
     # since we increased the size of the grid, we need to 
     # translate grid2 idx to grid1 coords
-    # me = theoretical centre of the 9x9x9 grid
-    # print(idx)
+    # me = theoretical centre of the 3x3x3[...x3] grid
     me = tuple(map(lambda x: x-1, idx))
     # fr = (max(0, me[0]-1), max(0, me[1]-1), max(0, me[2]-1))
     # to = (min(shape[0], me[0]+2), min(shape[1], me[1]+2), min(shape[2], me[2]+2))
     fr = tuple(map(lambda x: max(0, x-1), me))
-    to = tuple(map(lambda x: min(x[0], x[1]+2), zip(shape, me)))
+    to = tuple(map(lambda x: min(x[0], x[1]+2), zip(shape1, me)))
 
     # find out if the cube is active
-    in_bounds = all([(a >= 0) for a in me]) and all([(a < b) for a, b in zip(me, shape)]) 
-    active = 1 if in_bounds and grid[me] == 1 else 0
+    in_bounds = all([(a >= 0) for a in me]) and all([(a < b) for a, b in zip(me, shape1)]) 
+    active = 1 if in_bounds and grid1[me] == 1 else 0
 
-    # get the 9x9x9 block
-    search = grid[fr[0]:to[0],fr[1]:to[1],fr[2]:to[2]]
+    # get the 3x3x3[...x3] block
+    # search = grid[fr[0]:to[0],fr[1]:to[1],fr[2]:to[2]]
+    search_slice = tuple([slice(s[0], s[1]) for s in zip(fr, to)])
+    search = grid1[search_slice]
     size = np.size(search)
     total = np.sum(search)
 
     # print(idx, me, active, fr, to, total, '/', size)
 
-    #     During a cycle, all cubes simultaneously change their state according to the following rules:
-    # If a cube is active and exactly 2 or 3 of its neighbors are also active, the cube remains active. Otherwise, the cube becomes inactive.
-    # nb. exactly 3 or 4 including the active cube.
+    # During a cycle, all cubes simultaneously change their state according to the following rules:
+    # If a cube is active and exactly 2 or 3 of its neighbors are also active, the cube remains active. 
+    # Otherwise, the cube becomes inactive.
+    # nb. this translates to exactly 3 or 4 including the active cube.
     if active and (total < 3 or total > 4):
       active = 0
     # If a cube is inactive but exactly 3 of its neighbors are active, the cube becomes active. Otherwise, the cube remains inactive.
@@ -102,14 +98,31 @@ def trim(grid):
   
   return grid[tuple(slices)]
 
-def parseGrid(data, axis = 3):
+def parseGrid(data, ndmin = 3):
   if "z=" not in data:
     data = "z=0\n" + data
   xlam = lambda x: 1 if x == '#' else 0
   ylam = lambda y: list(map(xlam, y))
   zlam = lambda z: list(map(ylam, z.split('\n')[1:]))
-  x1 = list(map(zlam, data.split('\n\n')))
-  grid = np.array(x1, ndmin = axis)
+  blocks = data.split('\n\n')
+  x1 = list(map(zlam, blocks))
+
+  blam = lambda bl: list(map(int, re.findall(r'\w=([-\d]+)', bl.split('\n')[0])))
+  x2 = list(map(blam, blocks))
+  offset = list(map(lambda x: -x, x2[0]))
+  x2 = [list(map(sum, zip(coord, offset))) for coord in x2]
+  x2 = list(map(lambda x: x+1, max(x2)))
+  ndmin = max(ndmin, len(x2) + 2)
+  grid = np.array(x1, ndmin = ndmin)
+  # print(grid)
+  # print(x2)
+  # print(grid.shape)
+  # # x2 = 
+  # # grid.shape = (1, 9, 3, 3)
+  # # grid.reshape((3, 3, 3, 3))
+  reshape = tuple(x2 + list(grid.shape)[len(x2):])
+  print(grid.shape, '->', reshape)
+  grid = grid.reshape(reshape)
   print(grid)
   return grid
 
@@ -136,6 +149,56 @@ def test_parseGrid(example1_cycles):
     [0, 0, 1],
     [0, 1, 0],
   ]])
+
+def test_parseGrid_4d(example2_cycles):
+  # After 1 cycle:
+  example2_cycle1 = parseGrid(example2_cycles[1])
+  np.testing.assert_array_equal(example2_cycle1, [[[
+  # z=-1, w=-1
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+    ],[
+  # z=0, w=-1
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+    ],[
+  # z=1, w=-1
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+    ]],[[
+  # z=-1, w=0
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+    ],[
+  # z=0, w=0
+  [1, 0, 1], 
+  [0, 1, 1], 
+  [0, 1, 0], 
+    ],[
+  # z=1, w=0
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+    ]],[[
+  # z=-1, w=1
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+    ],[
+  # z=0, w=1
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+    ],[
+  # z=1, w=1
+  [1, 0, 0], 
+  [0, 0, 1], 
+  [0, 1, 0], 
+  ]]])
 
 def test_numpy_subset(example1_cycles):
   example1_cycle1 = parseGrid(example1_cycles[1])
@@ -179,25 +242,33 @@ def test_cycle_trim(example1_cycles):
   example1_cycle = parseGrid(example1_cycles[3])
   np.testing.assert_array_equal(grid, example1_cycle)
 
-# def test_cycle_trim_4d(example2_cycles):
-#   grid = parseGrid(example2_cycles[0], axis = 4)
+def test_cycle_trim_4d(example2_cycles):
+  grid = parseGrid(example2_cycles[0])
 
-#   grid = trim(cycle(grid))
-#   example2_cycle = parseGrid(example2_cycles[1])
-#   np.testing.assert_array_equal(grid, example2_cycle)
+  grid = trim(cycle(grid))
+  example2_cycle = parseGrid(example2_cycles[1])
+  np.testing.assert_array_equal(grid, example2_cycle)
+
+  grid = trim(cycle(grid))
+  example2_cycle = parseGrid(example2_cycles[2])
+  np.testing.assert_array_equal(grid, example2_cycle)
 
 
 # After the full six-cycle boot process completes, 112 cubes are left in the active state.
 def test_part1(example1):
   assert part1(example1) == 112
 
-# # After the full six-cycle boot process completes, 848 cubes are left in the active state.
-# def test_part2(example1):
-#   assert part2(example1) == 848
+# After the full six-cycle boot process completes, 848 cubes are left in the active state.
+def test_part2(example2):
+  assert part2(example2) == 848
 
 @pytest.fixture
 def example1(example1_cycles):
   return example1_cycles[0]
+
+@pytest.fixture
+def example2(example2_cycles):
+  return example2_cycles[0]
 
 @pytest.fixture
 def example1_cycles():
