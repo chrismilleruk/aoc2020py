@@ -60,71 +60,81 @@ def cycle(grid1):
 
   return grid2
 
+# Remove any slices from the n-dim cube that contain only zeros.
+# This is to ensure the n-dim cube is as small as possible.
 def trim(grid):
   size = len(grid.shape)
 
+  # For each axis in the n-dim cube.
   def trim_axis(idx):
-    start, stop = -1, grid.shape[idx] + 1
+    start, stop = 0, grid.shape[idx]
     axis_slice = [slice(None)] * size
+    # axis_slice is the equivalent of the following notation..
+    #   grid[0,:,:]
+    #   grid[:,0,:]
+    #   grid[:,:,0]
+    # .. which yields the cube face for each of z, y, x axes
     
-    # found = 0
-    # while not found:
-    #   start += 1
-    #   axis_slice[idx] = start
-    #   found = np.any(grid[tuple(axis_slice)])
-
-    # found = 0  
-    # while not found:
-    #   stop -= 1
-    #   axis_slice[idx] = stop - 1
-    #   found = np.any(grid[tuple(axis_slice)])
-
-  
+    # Increase the start index until we find a slice with values.
     for n in range(grid.shape[idx]):
       axis_slice[idx] = start = n
       if np.any(grid[tuple(axis_slice)]): break
 
+    # Decrease the stop index until we find a slice with values.
     for n in range(grid.shape[idx], -1, -1):
       stop = n
       axis_slice[idx] = stop - 1
       if np.any(grid[tuple(axis_slice)]): break
 
+    # If this happens, the cube is completely empty.
     assert start < stop
 
     return slice(start, stop)
 
-  slices = list(map(trim_axis, range(size)))
-  # print(slices)
-  
-  return grid[tuple(slices)]
+  # For each axis in the n-dim cube, do the above.
+  slices = tuple(map(trim_axis, range(size)))
+  return grid[slices]
 
 def parseGrid(data, ndmin = 3):
   if "z=" not in data:
     data = "z=0\n" + data
+
+  # First, parse the '#..#.' lines into a list of 2d slices.
   xlam = lambda x: 1 if x == '#' else 0
   ylam = lambda y: list(map(xlam, y))
   zlam = lambda z: list(map(ylam, z.split('\n')[1:]))
   blocks = data.split('\n\n')
   x1 = list(map(zlam, blocks))
 
+  # Then we process the 'z=0' or 'z=1, w=0' headers.
   blam = lambda bl: list(map(int, re.findall(r'\w=([-\d]+)', bl.split('\n')[0])))
   x2 = list(map(blam, blocks))
+  # Move all coords to non-negative space.
   offset = list(map(lambda x: -x, x2[0]))
   x2 = [list(map(sum, zip(coord, offset))) for coord in x2]
+  # Now we're looking for the max index, plus one to give us the shape.
   x2 = list(map(lambda x: x+1, max(x2)))
+ 
+  # Minimum dimensions should be either 3 or 4, but we'll use
+  # the largest value either passed in (ndim) or detected (x2)
   ndmin = max(ndmin, len(x2) + 2)
   grid = np.array(x1, ndmin = ndmin)
-  # print(grid)
-  # print(x2)
-  # print(grid.shape)
-  # # x2 = 
-  # # grid.shape = (1, 9, 3, 3)
-  # # grid.reshape((3, 3, 3, 3))
+  # Now we're looking to reshape the grid 
+  #       (w, z, y, x) where w = -1 to +1 and z = -1 to +1
+  # from: (1, 9, 3, 3)
+  # to:   (3, 3, 3, 3)
+  # We make assumptions about the ordering of the slices.
   reshape = tuple(x2 + list(grid.shape)[len(x2):])
-  print(grid.shape, '->', reshape)
-  grid = grid.reshape(reshape)
+  if grid.shape != reshape:
+    print('parseGrid reshape', grid.shape, '->', reshape)
+    grid = grid.reshape(reshape)
   print(grid)
   return grid
+
+
+
+
+
 
 def test_parseGrid(example1_cycles):
   # Before any cycles:
@@ -253,7 +263,6 @@ def test_cycle_trim_4d(example2_cycles):
   example2_cycle = parseGrid(example2_cycles[2])
   np.testing.assert_array_equal(grid, example2_cycle)
 
-
 # After the full six-cycle boot process completes, 112 cubes are left in the active state.
 def test_part1(example1):
   assert part1(example1) == 112
@@ -261,6 +270,9 @@ def test_part1(example1):
 # After the full six-cycle boot process completes, 848 cubes are left in the active state.
 def test_part2(example2):
   assert part2(example2) == 848
+
+
+
 
 @pytest.fixture
 def example1(example1_cycles):
