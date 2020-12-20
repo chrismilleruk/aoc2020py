@@ -9,11 +9,15 @@ import functools
 def part1(data):
   tiles = parse(data)
   edges = get_edges(tiles)
-  # print(edges)
 
+  # Sort the tiles by the number of matching edges.
+  # Corners will have 2 matching edges.
+  # Sides will have 3 matching edges.
+  # Middle will have 4 matching edges.
   fn = lambda x: (x[0], sum(map(lambda y: len(edges[y]), x[1][0][0])))
   sorted_tiles = sorted(map(fn, tiles.items()), key = lambda kv: kv[1])
 
+  # Product of the first four sorted tiles
   return functools.reduce(operator.mul, map(lambda t: t[0], sorted_tiles[:4]))
 
 def part2(data):
