@@ -1,6 +1,5 @@
 # Day 21: Allergen Assessment
 import pytest
-import numpy as np
 
 # Determine which ingredients cannot possibly contain any of the allergens in your list. How many times do any of those ingredients appear?
 def part1(data):
@@ -18,7 +17,44 @@ def part1(data):
   return count
 
 def part2(data):
-  return None
+  all_foods = parse(data)
+  ingredients, allergens = get_lookups(all_foods)
+  safe, unsafe = safe_ingredients(allergens, ingredients.keys())
+  # Now that you've isolated the inert ingredients, you should have enough information to figure out which ingredient contains which allergen.
+
+  # Filter allergens to potentially unsafe ingredients against each allergen
+  known_ingredients = {}
+  unsafe_set = set(unsafe)
+  for a, f in allergens.items():
+    potentially_unsafe_ingredients = [unsafe_set.intersection(food.ingredients) for food in f]
+    allergens[a] = unsafe_set.intersection(*potentially_unsafe_ingredients)
+
+    # If there is only one possible ingredient, add to known ingredients
+    if len(allergens[a]) == 1:
+      ingredient = next(iter(allergens[a]))
+      known_ingredients[ingredient] = a
+
+  changes = True
+  while changes:
+    changes = False
+    # Remove known ingredients from potential ingredients against each allergen
+    for key, values1 in allergens.items():
+      if len(values1) > 1:
+        values2 = values1.difference(known_ingredients.keys())
+        if values1 != values2:
+          changes = True
+          allergens[key] = values2
+
+          # If there is only one possible ingredient, add to known ingredients
+          if len(values2) == 1:
+            ingredient = next(iter(values2))
+            known_ingredients[ingredient] = key
+
+  print(known_ingredients)
+
+  # Arrange the ingredients alphabetically by their allergen and separate them by commas to produce your canonical dangerous ingredient list. (There should not be any spaces in your canonical dangerous ingredient list.) 
+  arranged_ingredients = map(lambda t: t[0], sorted(known_ingredients.items(), key = lambda t: t[1]))
+  return ",".join(arranged_ingredients)
 
 def parse(data):
   foods = list(map(lambda line: Food(line), data.split('\n')))
@@ -74,7 +110,12 @@ def test_safe_ingredients(example1):
   assert safe == {'kfcds', 'nhms', 'sbzzf', 'trh'}
 
 def test_part1(example1):
+  # Counting the number of times any of these ingredients appear in any ingredients list produces 5: they all appear once each except sbzzf, which appears twice.
   assert part1(example1) == 5
+
+def test_part2(example1):
+  # Arrange the ingredients alphabetically by their allergen and separate them by commas to produce your canonical dangerous ingredient list. (There should not be any spaces in your canonical dangerous ingredient list.) In the above example, this would be mxmxvkd,sqjhc,fvjkl.
+  assert part2(example1) == 'mxmxvkd,sqjhc,fvjkl'
 
 @pytest.fixture
 def example1():
